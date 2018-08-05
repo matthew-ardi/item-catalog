@@ -11,7 +11,7 @@ db = SQLAlchemy(app)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('home.html')
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
