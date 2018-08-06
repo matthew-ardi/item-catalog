@@ -13,6 +13,18 @@ db = SQLAlchemy(app)
 def index():
     return render_template('home.html')
 
+@app.route('/dashboard/')
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/create_categories/')
+def new_categories():
+    return render_template('new_categories.html')
+
+@app.route('/create_items/')
+def new_items():
+    return render_template('new_items.html')
+
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
     app.debug = True

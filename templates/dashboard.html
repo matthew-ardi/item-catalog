@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block css %}
+{% endblock %}
+{% block content %}
+<div class="card shadow-lg p-3 mb-5" style="width: 100%;">
+        <input type='button' class="btn btn-outline-primary" value='Create new' onclick="location.href= '{{ url_for('new_categories') }}'">
+        <input type='button' class="btn btn-outline-primary" value='Create items' onclick="location.href= '{{ url_for('new_items') }}'">
+        
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}
