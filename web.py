@@ -15,7 +15,8 @@ def index():
 
 @app.route('/dashboard/')
 def dashboard():
-    return render_template('dashboard.html')
+    categories = db.session.query(Categories).all()
+    return render_template('dashboard.html', categories=categories)
 
 @app.route('/create_categories/')
 def new_categories():

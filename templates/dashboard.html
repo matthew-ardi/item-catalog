@@ -7,6 +7,11 @@
         <input type='button' class="btn btn-outline-primary" value='Create new' onclick="location.href= '{{ url_for('new_categories') }}'">
         <input type='button' class="btn btn-outline-primary" value='Create items' onclick="location.href= '{{ url_for('new_items') }}'">
         
+
+<h1>Categories</h1>
+{% for category in categories %}
+        <h5>{{category.name}}</h5>
+{% endfor %}
 </div>
 {% endblock %}
 
