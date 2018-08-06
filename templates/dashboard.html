@@ -3,15 +3,34 @@
 {% block css %}
 {% endblock %}
 {% block content %}
+{% if flag == 'new_item' %}
+<div class="alert alert-success" role="alert">
+        {% if new_item_title %}
+            item {{ new_item_title }} has been successfully added!
+        {% endif %}
+</div>
+{% endif %}
 <div class="card shadow-lg p-3 mb-5" style="width: 100%;">
         <input type='button' class="btn btn-outline-primary" value='Create new' onclick="location.href= '{{ url_for('new_categories') }}'">
         <input type='button' class="btn btn-outline-primary" value='Create items' onclick="location.href= '{{ url_for('new_items') }}'">
         
 
-<h1>Categories</h1>
-{% for category in categories %}
-        <h5>{{category.name}}</h5>
-{% endfor %}
+
+<div class="row">
+        <div class="col">
+                <h1>Categories</h1>
+                {% for category in categories %}
+                        <h5>{{category.name}}</h5>
+                {% endfor %}
+        </div>
+        <div class="col">
+                <h1>Items</h1>
+                {% if items %}
+                        {% for item in items %}
+                        <h5>{{ item.title }}</h5>
+                        {% endfor %}
+                {% endif %}
+        </div>
 </div>
 {% endblock %}
 
