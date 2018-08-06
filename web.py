@@ -13,8 +13,32 @@ db = SQLAlchemy(app)
 def index():
     return render_template('home.html')
 
+
 @app.route('/dashboard/', methods=['GET', 'POST'])
 def dashboard():
+    
+        categories_all = db.session.query(Categories).all()  
+        try:     
+            latest_items = db.session.query(Categories_item).all()
+        except:
+            pass
+        return render_template('dashboard.html', categories=categories_all, latest_items=latest_items)
+
+@app.route('/catalog/<int:categories_id>/')
+def catalog_view(categories_id):
+    category = db.session.query(Categories).filter_by(id=categories_id).one()
+    categories_all = db.session.query(Categories).all()
+    items = db.session.query(Categories_item).filter_by(categories_item_id=categories_id)
+    items_num = items.count()
+    return render_template('dashboard.html', categories = categories_all, items=items, category=category, items_num=items_num)
+
+
+@app.route('/create_categories/')
+def new_categories():
+    return render_template('new_categories.html')
+
+@app.route('/create_items/', methods=['GET', 'POST'])
+def new_items():
     if request.method == 'POST':
         selected_category = request.form['selected_category']
         categories = db.session.query(Categories).filter_by(name=selected_category).one()
@@ -35,27 +59,36 @@ def dashboard():
         return render_template('dashboard.html', categories = categories_all, items = category_items, flag = success_flag, new_item_title = new_item_title)
     else:
         categories = db.session.query(Categories).all()
-
-        try:
-            items = db.session.query(Categories_item).all()
-        except:
-            items = None
-
-        return render_template('dashboard.html', categories=categories, items=items)
-
-
-@app.route('/create_categories/')
-def new_categories():
-    return render_template('new_categories.html')
-
-@app.route('/create_items/', methods=['GET', 'POST'])
-def new_items():
-    
-    
-        categories = db.session.query(Categories).all()
         return render_template(
             'new_items.html', categories=categories
             )
+
+@app.route('/catalog/<int:categories_id>/<int:categories_item_id>/delete/', methods=['GET', 'POST'])
+def delete_item(categories_id, categories_item_id):
+    if request.method == 'POST':
+        # category = db.session.query(Categories).filter_by(id=categories_id).one()
+        categories_all = db.session.query(Categories).all()
+        item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
+        deleted_item_title = item.title
+        db.session.delete(item)
+        db.session.commit()
+        success_flag = 'delete_item'
+
+        try:     
+            latest_items = db.session.query(Categories_item).all()
+        except:
+            pass
+        return redirect(url_for('dashboard', categories=categories_all, latest_items=latest_items, flag = success_flag, deleted_ited_title=deleted_item_title))
+    else:
+        return render_template('delete_item.html', categories_id=categories_id, categories_item_id=categories_item_id)
+
+
+@app.route('/catalog/<int:categories_id>/<int:categories_item_id>/')
+def catalog_description(categories_id, categories_item_id):
+    category = db.session.query(Categories).filter_by(id=categories_id).one()
+    item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
+    return render_template('description.html', category=category, item=item, categories_id=categories_id, categories_item_id=categories_item_id)
+
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

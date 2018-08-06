@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block css %}
+{% endblock %}
+{% block content %}
+<h1>Details</h1>
+{% if item %}
+<div class="card shadow-lg p-3 mb-5" style="width: 100%;">
+	<h2>{{ item.title }}</h2>
+	<h4>Description: </h4>
+	<h6>{{ item.description }}</h6>
+	<form action="{{ url_for('delete_item', categories_id=categories_id, categories_item_id=categories_item_id) }}" >
+		<input type='submit' class="btn btn-outline-primary" value='Delete'>
+	</form>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

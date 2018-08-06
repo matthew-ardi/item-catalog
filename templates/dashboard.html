@@ -10,26 +10,38 @@
         {% endif %}
 </div>
 {% endif %}
+{% if flag == 'delete_item' %}
+<div class="alert alert-success" role="alert">
+        {% if deleted_item_title %}
+                item {{ deleted_item_title }} has been successfully deleted!
+        {% endif %}
+</div>
+{% endif %}
 <div class="card shadow-lg p-3 mb-5" style="width: 100%;">
-        <input type='button' class="btn btn-outline-primary" value='Create new' onclick="location.href= '{{ url_for('new_categories') }}'">
         <input type='button' class="btn btn-outline-primary" value='Create items' onclick="location.href= '{{ url_for('new_items') }}'">
         
-
-
-<div class="row">
-        <div class="col">
-                <h1>Categories</h1>
-                {% for category in categories %}
-                        <h5>{{category.name}}</h5>
-                {% endfor %}
-        </div>
-        <div class="col">
-                <h1>Items</h1>
-                {% if items %}
-                        {% for item in items %}
-                        <h5>{{ item.title }}</h5>
+        <div class="row">
+                <div class="col">
+                        <h1>Categories</h1>
+                        {% for category in categories %}
+                                <h5><a href="/catalog/{{ category.id }}">{{category.name}}</a></h5>
                         {% endfor %}
-                {% endif %}
+                </div>
+                <div class="col">
+                        {% if items %}
+                        <h1>{{ category.name }} Items ({{ items_num }} items)</h1>
+                                {% for item in items %}
+                                <h5><a href="/catalog/{{ item.categories.id }}/{{ item.id }}">{{ item.title }}</a></h5>
+                                {% endfor %}
+                        {% endif %}
+
+                        {% if latest_items %}
+                        <h1>Latest Items</h1>
+                                {% for latest_item in latest_items|reverse %}
+                                        <h5><a href="/catalog/{{ latest_item.categories.id }}/{{ latest_item.id }}">{{ latest_item.title }}</a> ({{ latest_item.categories.name }})</h5>
+                                {% endfor %}
+                        {% endif %}
+                </div>
         </div>
 </div>
 {% endblock %}
