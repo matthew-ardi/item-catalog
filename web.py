@@ -3,8 +3,19 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Categories, Categories_item
 from flask_sqlalchemy import SQLAlchemy
+from flask_dance.contrib.google import make_google_blueprint, google
+
+import os
 
 app = Flask(__name__)
+
+blueprint = make_google_blueprint(
+    client_id=os.environ['GOOGLE_CLIENT_ID'],
+    client_secret=os.environ['GOOGLE_CLIENT_SECRET'],
+    scope=["profile", "email"]
+)
+app.register_blueprint(blueprint, url_prefix="/login")
+
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///catalog_items.db'
 db = SQLAlchemy(app)
@@ -56,7 +67,13 @@ def new_items():
         categories_all = db.session.query(Categories).all()
         category_items = db.session.query(Categories_item).filter_by(categories_item_id=categories_id)
         success_flag = 'new_item'
-        return render_template('dashboard.html', categories = categories_all, items = category_items, flag = success_flag, new_item_title = new_item_title)
+
+        try:     
+            latest_items = db.session.query(Categories_item).all()
+        except:
+            pass
+
+        return redirect(url_for('dashboard', categories = categories_all, items = category_items, flag = success_flag, latest_items=latest_items, new_item_title = new_item_title))
     else:
         categories = db.session.query(Categories).all()
         return render_template(
@@ -72,13 +89,13 @@ def delete_item(categories_id, categories_item_id):
         deleted_item_title = item.title
         db.session.delete(item)
         db.session.commit()
-        success_flag = 'delete_item'
+        success_flags = 'delete_item'
 
         try:     
             latest_items = db.session.query(Categories_item).all()
         except:
             pass
-        return redirect(url_for('dashboard', categories=categories_all, latest_items=latest_items, flag = success_flag, deleted_ited_title=deleted_item_title))
+        return redirect(url_for('dashboard', categories=categories_all, latest_items=latest_items, flags = success_flags, deleted_item_title=deleted_item_title))
     else:
         return render_template('delete_item.html', categories_id=categories_id, categories_item_id=categories_item_id)
 
@@ -89,8 +106,15 @@ def catalog_description(categories_id, categories_item_id):
     item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
     return render_template('description.html', category=category, item=item, categories_id=categories_id, categories_item_id=categories_item_id)
 
+@app.route("/test")
+def home():
+    if not google.authorized:
+        return redirect(url_for("google.login"))
+    resp = google.get("/oauth2/v2/userinfo")
+    assert resp.ok, resp.text
+    return "You are {email} on Google".format(email=resp.json()["email"])
 
 if __name__ == '__main__':
-    app.secret_key = 'super_secret_key'
+    app.secret_key = 'dkwkdo390fl201d0xl3kd'
     app.debug = True
     app.run(host='0.0.0.0', port=5000)

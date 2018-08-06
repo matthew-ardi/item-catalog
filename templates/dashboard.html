@@ -10,11 +10,16 @@
         {% endif %}
 </div>
 {% endif %}
-{% if flag == 'delete_item' %}
+{% if flags %}
+<h3>{{ flags }}</h3>
+{% endif %}
+{% if flags == 'delete_item' %}
 <div class="alert alert-success" role="alert">
         {% if deleted_item_title %}
-                item {{ deleted_item_title }} has been successfully deleted!
+                <!-- item {{ deleted_item_title }} has been successfully deleted! -->
+                
         {% endif %}
+        item has been successfully delete
 </div>
 {% endif %}
 <div class="card shadow-lg p-3 mb-5" style="width: 100%;">
@@ -28,12 +33,14 @@
                         {% endfor %}
                 </div>
                 <div class="col">
-                        {% if items %}
-                        <h1>{{ category.name }} Items ({{ items_num }} items)</h1>
-                                {% for item in items %}
-                                <h5><a href="/catalog/{{ item.categories.id }}/{{ item.id }}">{{ item.title }}</a></h5>
-                                {% endfor %}
-                        {% endif %}
+                        <!-- {% if flag != 'new_item' %} -->
+                                {% if items %}
+                                <h1>{{ category.name }} Items ({{ items_num }} items)</h1>
+                                        {% for item in items %}
+                                        <h5><a href="/catalog/{{ item.categories.id }}/{{ item.id }}">{{ item.title }}</a></h5>
+                                        {% endfor %}
+                                {% endif %}
+                        <!-- {% endif %} -->
 
                         {% if latest_items %}
                         <h1>Latest Items</h1>
