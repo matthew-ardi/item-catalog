@@ -32,6 +32,9 @@
         </dl>
     </form>
 </div>
+<form action="{{ url_for('dashboard', username=username) }}">
+<input type='submit' class="btn btn-outline-primary" value='Back to Dashboard' style="width: 15%;">
+</form>
 {% endblock %}
 
 {% block scripts %}

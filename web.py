@@ -76,6 +76,9 @@ def catalog_view(categories_id, username):
     categories_all = db.session.query(Categories).all()
     items = db.session.query(Categories_item).filter_by(categories_item_id=categories_id)
     items_num = items.count()
+    if username == 'none':
+        username = None
+        
     return render_template('dashboard.html', username=username, categories = categories_all, items=items, category=category, items_num=items_num)
 
 
@@ -117,13 +120,13 @@ def new_items(username):
             'new_items.html', categories=categories, username=username
             )
 
-@app.route('/catalog/<int:categories_id>/<int:categories_item_id>/delete/', methods=['GET', 'POST'])
-def delete_item(categories_id, categories_item_id):
+@app.route('/catalog/<int:categories_id>/<int:categories_item_id>/delete/<username>', methods=['GET', 'POST'])
+def delete_item(categories_id, categories_item_id, username):
+    categories_all = db.session.query(Categories).all()
+    item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
+    deleted_item_title = item.title
     if request.method == 'POST':
         # category = db.session.query(Categories).filter_by(id=categories_id).one()
-        categories_all = db.session.query(Categories).all()
-        item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
-        deleted_item_title = item.title
         db.session.delete(item)
         db.session.commit()
         flash("item " + deleted_item_title + " has been successfully deleted.", "success")
@@ -131,15 +134,19 @@ def delete_item(categories_id, categories_item_id):
             latest_items = db.session.query(Categories_item).all()
         except:
             pass
-        return redirect(url_for('dashboard', categories=categories_all, latest_items=latest_items, deleted_item_title=deleted_item_title))
+        return redirect(url_for('dashboard', username=username, categories=categories_all, latest_items=latest_items, deleted_item_title=deleted_item_title))
     else:
-        return render_template('delete_item.html', categories_id=categories_id, categories_item_id=categories_item_id)
+        return render_template('delete_item.html', username=username, deleted_item_title=deleted_item_title,
+        categories_id=categories_id, categories_item_id=categories_item_id)
 
 @app.route('/catalog/<int:categories_id>/<int:categories_item_id>/<username>')
 # @app.route('/catalog/<int:categories_id>/<int:categories_item_id>/')
 def catalog_description(categories_id, categories_item_id, username):
     category = db.session.query(Categories).filter_by(id=categories_id).one()
     item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
+    if username == 'none':
+        username = None
+
     return render_template('description.html', username=username, 
     category=category, item=item, categories_id=categories_id, categories_item_id=categories_item_id)
 
