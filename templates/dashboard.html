@@ -3,28 +3,20 @@
 {% block css %}
 {% endblock %}
 {% block content %}
-{% if flag == 'new_item' %}
-<div class="alert alert-success" role="alert">
-        {% if new_item_title %}
-            item {{ new_item_title }} has been successfully added!
+{% with messages = get_flashed_messages() %}
+        {% if messages %}
+                {% for message in messages %}
+                        <div class="alert alert-success" role="alert">
+                                <strong> {{ message }} </strong>
+                        </div>
+                {% endfor %}
         {% endif %}
-</div>
-{% endif %}
-{% if flags %}
-<h3>{{ flags }}</h3>
-{% endif %}
-{% if flags == 'delete_item' %}
-<div class="alert alert-success" role="alert">
-        {% if deleted_item_title %}
-                <!-- item {{ deleted_item_title }} has been successfully deleted! -->
-                
-        {% endif %}
-        item has been successfully delete
-</div>
-{% endif %}
+{% endwith %}
+
 <div class="card shadow-lg p-3 mb-5" style="width: 100%;">
+        {% if username %}
         <input type='button' class="btn btn-outline-primary" value='Create items' onclick="location.href= '{{ url_for('new_items') }}'">
-        
+        {% endif %}
         <div class="row">
                 <div class="col">
                         <h1>Categories</h1>
@@ -33,14 +25,12 @@
                         {% endfor %}
                 </div>
                 <div class="col">
-                        <!-- {% if flag != 'new_item' %} -->
-                                {% if items %}
-                                <h1>{{ category.name }} Items ({{ items_num }} items)</h1>
-                                        {% for item in items %}
-                                        <h5><a href="/catalog/{{ item.categories.id }}/{{ item.id }}">{{ item.title }}</a></h5>
-                                        {% endfor %}
-                                {% endif %}
-                        <!-- {% endif %} -->
+                        {% if items %}
+                        <h1>{{ category.name }} Items ({{ items_num }} items)</h1>
+                                {% for item in items %}
+                                <h5><a href="/catalog/{{ item.categories.id }}/{{ item.id }}">{{ item.title }}</a></h5>
+                                {% endfor %}
+                        {% endif %}
 
                         {% if latest_items %}
                         <h1>Latest Items</h1>

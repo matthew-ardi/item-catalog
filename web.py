@@ -4,11 +4,18 @@ from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Categories, Categories_item
 from flask_sqlalchemy import SQLAlchemy
 from flask_dance.contrib.google import make_google_blueprint, google
+from flask import session as login_session
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import FlowExchangeError
+from flask import make_response
+from flask_oauth import OAuth
+import requests
 
-import os
+import os, random, string, json, httplib2
 
 app = Flask(__name__)
-
+GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
+GOOGLE_CLIENT_SECRET = os.environ['GOOGLE_CLIENT_SECRET']
 blueprint = make_google_blueprint(
     client_id=os.environ['GOOGLE_CLIENT_ID'],
     client_secret=os.environ['GOOGLE_CLIENT_SECRET'],
@@ -20,6 +27,20 @@ app.register_blueprint(blueprint, url_prefix="/login")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///catalog_items.db'
 db = SQLAlchemy(app)
 
+oauth = OAuth()
+REDIRECT_URI = '/oauth2callback'
+google = oauth.remote_app('google',
+                          base_url='https://www.google.com/accounts/',
+                          authorize_url='https://accounts.google.com/o/oauth2/auth',
+                          request_token_url=None,
+                          request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.email',
+                                                'response_type': 'code'},
+                          access_token_url='https://accounts.google.com/o/oauth2/token',
+                          access_token_method='POST',
+                          access_token_params={'grant_type': 'authorization_code'},
+                          consumer_key=GOOGLE_CLIENT_ID,
+                          consumer_secret=GOOGLE_CLIENT_SECRET)
+
 @app.route('/')
 def index():
     return render_template('home.html')
@@ -27,13 +48,27 @@ def index():
 
 @app.route('/dashboard/', methods=['GET', 'POST'])
 def dashboard():
-    
+
+        state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in xrange(32))
+        login_session['state'] = state
+        if 'username' in login_session:
+            logged_in = True
+        else:
+            logged_in = False
+
         categories_all = db.session.query(Categories).all()  
         try:     
             latest_items = db.session.query(Categories_item).all()
         except:
             pass
-        return render_template('dashboard.html', categories=categories_all, latest_items=latest_items)
+        
+        if logged_in:   
+            return render_template('dashboard.html', logged_in=logged_in, categories=categories_all, latest_items=latest_items, 
+            username=login_session['username'], google_client_id = os.environ['GOOGLE_CLIENT_ID'], STATE=state)
+        else:
+            return render_template('dashboard.html', logged_in=logged_in, categories=categories_all, latest_items=latest_items,
+             google_client_id = os.environ['GOOGLE_CLIENT_ID'], STATE=state)
 
 @app.route('/catalog/<int:categories_id>/')
 def catalog_view(categories_id):
@@ -66,14 +101,15 @@ def new_items():
 
         categories_all = db.session.query(Categories).all()
         category_items = db.session.query(Categories_item).filter_by(categories_item_id=categories_id)
-        success_flag = 'new_item'
+
 
         try:     
             latest_items = db.session.query(Categories_item).all()
         except:
             pass
 
-        return redirect(url_for('dashboard', categories = categories_all, items = category_items, flag = success_flag, latest_items=latest_items, new_item_title = new_item_title))
+        flash("item " + new_item_title + " has been successfully added.")
+        return redirect(url_for('dashboard', categories = categories_all, items = category_items, latest_items=latest_items, new_item_title = new_item_title))
     else:
         categories = db.session.query(Categories).all()
         return render_template(
@@ -89,13 +125,12 @@ def delete_item(categories_id, categories_item_id):
         deleted_item_title = item.title
         db.session.delete(item)
         db.session.commit()
-        success_flags = 'delete_item'
-
+        flash("item " + deleted_item_title + " has been successfully deleted.")
         try:     
             latest_items = db.session.query(Categories_item).all()
         except:
             pass
-        return redirect(url_for('dashboard', categories=categories_all, latest_items=latest_items, flags = success_flags, deleted_item_title=deleted_item_title))
+        return redirect(url_for('dashboard', categories=categories_all, latest_items=latest_items, deleted_item_title=deleted_item_title))
     else:
         return render_template('delete_item.html', categories_id=categories_id, categories_item_id=categories_item_id)
 
@@ -106,13 +141,77 @@ def catalog_description(categories_id, categories_item_id):
     item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
     return render_template('description.html', category=category, item=item, categories_id=categories_id, categories_item_id=categories_item_id)
 
-@app.route("/test")
-def home():
-    if not google.authorized:
-        return redirect(url_for("google.login"))
-    resp = google.get("/oauth2/v2/userinfo")
-    assert resp.ok, resp.text
-    return "You are {email} on Google".format(email=resp.json()["email"])
+
+@app.route('/google_login')
+def google_login():
+    access_token = login_session.get('access_token')
+    if access_token is None:
+        return redirect(url_for('login'))
+ 
+    access_token = access_token[0]
+    from urllib2 import Request, urlopen, URLError
+ 
+    headers = {'Authorization': 'OAuth '+access_token}
+    req = Request('https://www.googleapis.com/oauth2/v1/userinfo',
+                  None, headers)
+    try:
+        res = urlopen(req)
+        data = json.loads(res.read())
+        login_session['username'] = data['name']
+    except URLError, e:
+        if e.code == 401:
+            # Unauthorized - bad token
+            login_session.pop('access_token', None)
+            return redirect(url_for('google_login'))
+        return res.read()
+	
+	
+    return redirect(url_for('dashboard'))
+ 
+ 
+@app.route('/login')
+def login():
+    callback=url_for('authorized', _external=True)
+    return google.authorize(callback=callback)
+ 
+ 
+ 
+@app.route(REDIRECT_URI)
+@google.authorized_handler
+def authorized(resp):
+    access_token = resp['access_token']
+    login_session['access_token'] = access_token, ''
+    return redirect(url_for('google_login'))
+ 
+ 
+@google.tokengetter
+def get_access_token():
+    return login_session.get('access_token')
+
+@app.route('/gdisconnect')
+def gdisconnect():
+    access_token = login_session.get('access_token')
+    if access_token is None:
+        print 'Access Token is None'
+        del login_session['username']
+        response = make_response(json.dumps('Current user not connected.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    
+    requests.post('https://accounts.google.com/o/oauth2/revoke',
+        params={'token': access_token},
+        headers = {'content-type': 'application/x-www-form-urlencoded'})
+
+    del login_session['access_token']
+    del login_session['username']
+    response = make_response(json.dumps('Successfully disconnected.'), 200)
+    response.headers['Content-Type'] = 'application/json'
+    return redirect(url_for('dashboard'))
+    # else:
+    #     response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+    #     response.headers['Content-Type'] = 'application/json'
+    #     return response
+
 
 if __name__ == '__main__':
     app.secret_key = 'dkwkdo390fl201d0xl3kd'
