@@ -5,7 +5,7 @@
 {% block content %}
 <h1>Add New Item</h1>
 <div class="card shadow-lg p-3 mb-5" style="width: 100%;">
-    <form action="{{ url_for('new_items') }}" method='post'>
+    <form action="{{ url_for('new_items', username=username) }}" method='post'>
         <dl>
             <div class="form-group" style='width: 30%;'>
                 <label>Title</label>
@@ -35,7 +35,4 @@
 {% endblock %}
 
 {% block scripts %}
-$('.dropdown-menu a').click(function(){
-    $('#selected').text($(this).text());
-  });
 {% endblock %}

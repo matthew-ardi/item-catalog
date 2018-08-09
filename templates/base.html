@@ -45,75 +45,60 @@
         
     </body>
 </html>
-<script>
-    {% block scripts %}
-    {% endblock %}
-    function signInCallback(authResult) {
-      if (authResult['code']) {
-      // Hide the sign-in button now that the user is authorized
-      $('#signinButton').attr('style', 'display: none');
-      // Send the one-time-use code to the server, if the server responds, write a 'login successful' message to the web page and then redirect back to the main restaurants page
-      $.ajax({
-        type: 'POST',
-        url: '/gconnect?state={{STATE}}',
-        processData: false,
-        data: authResult['code'],
-        contentType: 'application/octet-stream; charset=utf-8',
-        success: function(result) {
-        // Handle or verify the server response if necessary.
-        if (result) {
-          $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
-         setTimeout(function() {
-          window.location.href = "/dashboard";
-         }, 1000);
-          
-        } else if (authResult['error']) {
-      console.log('There was an error: ' + authResult['error']);
-      } else {
-        $('#result').html('Failed to make a server-side call. Check your configuration and console.');
-         }
-        }
-        
-      }); } }
-    </script>
-
 <!-- Modal -->
 <div class="modal fade" id="login_panel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">Please login</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              
-              <!-- <h4 style="color:black;text-align:center;">- or -</h4> -->
-              
-              <a class="oauth-btn btn btn-block btn-social btn-md btn-github center-block btn-dark " style="width: 100%; color: white;" id="github_login" >
-                <span class="fa fa-github" style="color: white;"></span> Sign in with Github
-              </a>
-              <div id="signinButton">
-              <a href="/google_login" class="oauth-btn btn btn-block btn-social btn-md btn-google center-block btn-danger" style="width: 100%; color: white;" >
-                <span class="fa fa-google" style="color: white;"></span> Sign in with Google
-              </a>
-
-              <!-- <div id="signinButton">
-                  <span class="g-signin"
-                    data-scope="openid email"
-                    data-clientid={{google_client_id}}
-                    data-redirecturi="postmessage"
-                    data-accesstype="offline"
-                    data-cookiepolicy="single_host_origin"
-                    data-callback="signInCallback"
-                    data-approvalprompt="force">
-                  </span>
-                </div> -->
-            </div>
-            </div>
-            <div class="modal-footer">
-            </div>
-          </div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Please login</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          
+          <!-- <h4 style="color:black;text-align:center;">- or -</h4> -->
+          
+          <a class="oauth-btn btn btn-block btn-social btn-md btn-github center-block btn-dark " style="width: 100%; color: white;" id="github_login" >
+            <span class="fa fa-github" style="color: white;"></span> Sign in with Github
+          </a>
+          <div id="signinButton">
+              <form method='post'>
+          <a href="/login" class="oauth-btn btn btn-block btn-social btn-md btn-google center-block btn-danger" style="width: 100%; color: white;" >
+            <span class="fa fa-google" style="color: white;"></span> Sign in with Google
+          </a>
+          </form>
+        </div>
+        </div>
+        <div class="modal-footer">
         </div>
       </div>
+    </div>
+  </div>
+<!-- <script> -->
+    {% block scripts %}
+    {% endblock %}
+    <script>
+        function postExample() {
+            $.post('/login', {"postfield1":"val1"}, function(resp) {
+                //Do something with the AJAX response
+                $.ajax({
+                    type: 'POST',
+                    url: '/login',
+                });
+            });
+        }
+   </script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('a[name="google-login"]').click(function(){
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/login',
+                });
+      });
+    });
+    </script>
+
+

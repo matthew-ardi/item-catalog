@@ -70,21 +70,21 @@ def dashboard():
             return render_template('dashboard.html', logged_in=logged_in, categories=categories_all, latest_items=latest_items,
              google_client_id = os.environ['GOOGLE_CLIENT_ID'], STATE=state)
 
-@app.route('/catalog/<int:categories_id>/')
-def catalog_view(categories_id):
+@app.route('/catalog/<int:categories_id>/<username>')
+def catalog_view(categories_id, username):
     category = db.session.query(Categories).filter_by(id=categories_id).one()
     categories_all = db.session.query(Categories).all()
     items = db.session.query(Categories_item).filter_by(categories_item_id=categories_id)
     items_num = items.count()
-    return render_template('dashboard.html', categories = categories_all, items=items, category=category, items_num=items_num)
+    return render_template('dashboard.html', username=username, categories = categories_all, items=items, category=category, items_num=items_num)
 
 
 @app.route('/create_categories/')
 def new_categories():
     return render_template('new_categories.html')
 
-@app.route('/create_items/', methods=['GET', 'POST'])
-def new_items():
+@app.route('/create_items/<username>', methods=['GET', 'POST'])
+def new_items(username):
     if request.method == 'POST':
         selected_category = request.form['selected_category']
         categories = db.session.query(Categories).filter_by(name=selected_category).one()
@@ -108,12 +108,13 @@ def new_items():
         except:
             pass
 
-        flash("item " + new_item_title + " has been successfully added.")
-        return redirect(url_for('dashboard', categories = categories_all, items = category_items, latest_items=latest_items, new_item_title = new_item_title))
+        flash("item " + new_item_title + " has been successfully added.", "success")
+        return redirect(url_for('dashboard', categories = categories_all, items = category_items, username=username, 
+        latest_items=latest_items, new_item_title = new_item_title))
     else:
         categories = db.session.query(Categories).all()
         return render_template(
-            'new_items.html', categories=categories
+            'new_items.html', categories=categories, username=username
             )
 
 @app.route('/catalog/<int:categories_id>/<int:categories_item_id>/delete/', methods=['GET', 'POST'])
@@ -125,7 +126,7 @@ def delete_item(categories_id, categories_item_id):
         deleted_item_title = item.title
         db.session.delete(item)
         db.session.commit()
-        flash("item " + deleted_item_title + " has been successfully deleted.")
+        flash("item " + deleted_item_title + " has been successfully deleted.", "success")
         try:     
             latest_items = db.session.query(Categories_item).all()
         except:
@@ -134,43 +135,63 @@ def delete_item(categories_id, categories_item_id):
     else:
         return render_template('delete_item.html', categories_id=categories_id, categories_item_id=categories_item_id)
 
-
-@app.route('/catalog/<int:categories_id>/<int:categories_item_id>/')
-def catalog_description(categories_id, categories_item_id):
+@app.route('/catalog/<int:categories_id>/<int:categories_item_id>/<username>')
+# @app.route('/catalog/<int:categories_id>/<int:categories_item_id>/')
+def catalog_description(categories_id, categories_item_id, username):
     category = db.session.query(Categories).filter_by(id=categories_id).one()
     item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
-    return render_template('description.html', category=category, item=item, categories_id=categories_id, categories_item_id=categories_item_id)
+    return render_template('description.html', username=username, 
+    category=category, item=item, categories_id=categories_id, categories_item_id=categories_item_id)
+
+# Create anti-forgery state token
+@app.route('/login')
+def login():
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in xrange(32))
+    login_session['state'] = state
+    # return "The current session state is %s" % login_session['state']
+    return redirect(url_for('check_google_login', STATE=state))
+
+# Validate state token
+@app.route('/check_google_login/<STATE>')
+def check_google_login(STATE):
+    if STATE != login_session['state']:
+        flash("Invalid state parameter.", "error")
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('google_login'))
 
 
 @app.route('/google_login')
 def google_login():
+
     access_token = login_session.get('access_token')
     if access_token is None:
-        return redirect(url_for('login'))
+        return redirect(url_for('google_auth_login'))
  
     access_token = access_token[0]
     from urllib2 import Request, urlopen, URLError
  
-    headers = {'Authorization': 'OAuth '+access_token}
+    headers = {'Authorization': 'OAuth ' + access_token}
     req = Request('https://www.googleapis.com/oauth2/v1/userinfo',
                   None, headers)
     try:
         res = urlopen(req)
         data = json.loads(res.read())
         login_session['username'] = data['name']
+        login_session['user_email'] = data['email']
+        flash("You just logged in as " + str(login_session['username']) + " using your " + str(login_session['user_email']) + " account.", "success")
     except URLError, e:
         if e.code == 401:
             # Unauthorized - bad token
             login_session.pop('access_token', None)
             return redirect(url_for('google_login'))
         return res.read()
-	
-	
     return redirect(url_for('dashboard'))
  
  
-@app.route('/login')
-def login():
+@app.route('/google_auth_login')
+def google_auth_login():
     callback=url_for('authorized', _external=True)
     return google.authorize(callback=callback)
  
@@ -191,21 +212,31 @@ def get_access_token():
 @app.route('/gdisconnect')
 def gdisconnect():
     access_token = login_session.get('access_token')
+    if 'username' in login_session:
+        del login_session['access_token']
+        del login_session['username']
+    else:
+        flash('You are not logged in', "error")
+        return redirect(url_for('dashboard'))
+
     if access_token is None:
         print 'Access Token is None'
-        del login_session['username']
-        response = make_response(json.dumps('Current user not connected.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+        if 'username' in login_session:
+            del login_session['username']
+
+        flash('You are not logged in', "error")
+        return redirect(url_for('dashboard'))
+        
     
-    requests.post('https://accounts.google.com/o/oauth2/revoke',
+    result = requests.post('https://accounts.google.com/o/oauth2/revoke',
         params={'token': access_token},
         headers = {'content-type': 'application/x-www-form-urlencoded'})
+    print result.status_code
 
-    del login_session['access_token']
-    del login_session['username']
+
     response = make_response(json.dumps('Successfully disconnected.'), 200)
     response.headers['Content-Type'] = 'application/json'
+    flash('Logout was successful.', "success")
     return redirect(url_for('dashboard'))
     # else:
     #     response = make_response(json.dumps('Failed to revoke token for given user.', 400))

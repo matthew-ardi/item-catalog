@@ -3,7 +3,7 @@
 {% block css %}
 {% endblock %}
 {% block content %}
-{% with messages = get_flashed_messages() %}
+{% with messages = get_flashed_messages(category_filter=["success"]) %}
         {% if messages %}
                 {% for message in messages %}
                         <div class="alert alert-success" role="alert">
@@ -12,30 +12,51 @@
                 {% endfor %}
         {% endif %}
 {% endwith %}
+{% with messages = get_flashed_messages(category_filter=["error"]) %}
+        {% if messages %}
+                {% for message in messages %}
+                        <div class="alert alert-danger" role="alert">
+                                <strong> {{ message }} </strong>
+                        </div>
+                {% endfor %}
+        {% endif %}
+{% endwith %}
 
 <div class="card shadow-lg p-3 mb-5" style="width: 100%;">
         {% if username %}
-        <input type='button' class="btn btn-outline-primary" value='Create items' onclick="location.href= '{{ url_for('new_items') }}'">
+        <input type='button' class="btn btn-outline-primary" value='Create items' onclick="location.href= '{{ url_for('new_items', username=username) }}'">
         {% endif %}
         <div class="row">
                 <div class="col">
                         <h1>Categories</h1>
                         {% for category in categories %}
-                                <h5><a href="/catalog/{{ category.id }}">{{category.name}}</a></h5>
+                        {% if username %}
+                                <h5><a href="/catalog/{{ category.id }}/{{ username }}">{{category.name}}</a></h5>
+                        {% else %}
+                                <h5><a href="/catalog/{{ category.id }}/none">{{category.name}}</a></h5>
+                        {% endif %}
                         {% endfor %}
                 </div>
                 <div class="col">
                         {% if items %}
                         <h1>{{ category.name }} Items ({{ items_num }} items)</h1>
                                 {% for item in items %}
-                                <h5><a href="/catalog/{{ item.categories.id }}/{{ item.id }}">{{ item.title }}</a></h5>
+                                {% if username %}
+                                <h5><a href="/catalog/{{ item.categories.id }}/{{ item.id }}/{{ username }}">{{ item.title }}</a></h5>
+                                {% else %}
+                                <h5><a href="/catalog/{{ item.categories.id }}/{{ item.id }}/none">{{ item.title }}</a></h5>
+                                {% endif %}
                                 {% endfor %}
                         {% endif %}
 
                         {% if latest_items %}
                         <h1>Latest Items</h1>
                                 {% for latest_item in latest_items|reverse %}
-                                        <h5><a href="/catalog/{{ latest_item.categories.id }}/{{ latest_item.id }}">{{ latest_item.title }}</a> ({{ latest_item.categories.name }})</h5>
+                                {% if username %}
+                                <h5><a href="/catalog/{{ latest_item.categories.id }}/{{ latest_item.id }}/{{ username }}">{{ latest_item.title }}</a> ({{ latest_item.categories.name }})</h5>
+                                {% else %}
+                                <h5><a href="/catalog/{{ latest_item.categories.id }}/{{ latest_item.id }}/none">{{ latest_item.title }}</a> ({{ latest_item.categories.name }})</h5>
+                                {% endif %}
                                 {% endfor %}
                         {% endif %}
                 </div>
