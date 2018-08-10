@@ -9,13 +9,21 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 from flask import make_response
 from flask_oauth import OAuth
-import requests, time
-
-import os, random, string, json, httplib2
+import requests
+import time
+import os
+import random
+import string
+import json
+import httplib2
 
 app = Flask(__name__)
+
+# getting environment variables
 GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
 GOOGLE_CLIENT_SECRET = os.environ['GOOGLE_CLIENT_SECRET']
+
+# Setting up blueprint for Google Auth
 blueprint = make_google_blueprint(
     client_id=os.environ['GOOGLE_CLIENT_ID'],
     client_secret=os.environ['GOOGLE_CLIENT_SECRET'],
@@ -23,69 +31,74 @@ blueprint = make_google_blueprint(
 )
 app.register_blueprint(blueprint, url_prefix="/login")
 
-
+# Setting up config for database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///catalog_items.db'
 db = SQLAlchemy(app)
 
+# Setting up Google Oauth
 oauth = OAuth()
 REDIRECT_URI = '/oauth2callback'
-google = oauth.remote_app('google',
-                          base_url='https://www.google.com/accounts/',
-                          authorize_url='https://accounts.google.com/o/oauth2/auth',
-                          request_token_url=None,
-                          request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.email',
-                                                'response_type': 'code'},
-                          access_token_url='https://accounts.google.com/o/oauth2/token',
-                          access_token_method='POST',
-                          access_token_params={'grant_type': 'authorization_code'},
-                          consumer_key=GOOGLE_CLIENT_ID,
-                          consumer_secret=GOOGLE_CLIENT_SECRET)
-
-@app.route('/')
-def index():
-    return render_template('home.html')
+google = oauth.remote_app(
+    'google',
+     base_url='https://www.google.com/accounts/',
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    request_token_url=None,
+    request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.email',
+                        'response_type': 'code'},
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    access_token_method='POST',
+    access_token_params={'grant_type': 'authorization_code'},
+    consumer_key=GOOGLE_CLIENT_ID,
+    consumer_secret=GOOGLE_CLIENT_SECRET)                
 
 
+# route for dashboard
 @app.route('/dashboard/', methods=['GET', 'POST'])
 def dashboard():
 
+        # Generate state token for login authentication
         state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
         login_session['state'] = state
+
+        # Checking login status and set flag
         if 'username' in login_session:
             logged_in = True
         else:
             logged_in = False
 
+        # Getting data fro the database
         categories_all = db.session.query(Categories).all()  
         try:     
             latest_items = db.session.query(Categories_item).all()
         except:
             pass
         
+        
         if logged_in:   
-            return render_template('dashboard.html', logged_in=logged_in, categories=categories_all, latest_items=latest_items, 
-            username=login_session['username'], google_client_id = os.environ['GOOGLE_CLIENT_ID'], STATE=state)
+            return render_template('dashboard.html', logged_in=logged_in, 
+                                    categories=categories_all, latest_items=latest_items, 
+                                    username=login_session['username'], google_client_id = os.environ['GOOGLE_CLIENT_ID'],
+                                    STATE=state)
         else:
             return render_template('dashboard.html', logged_in=logged_in, categories=categories_all, latest_items=latest_items,
              google_client_id = os.environ['GOOGLE_CLIENT_ID'], STATE=state)
 
+# route to render dashboard view when user click categories section
 @app.route('/catalog/<int:categories_id>/<username>')
 def catalog_view(categories_id, username):
     category = db.session.query(Categories).filter_by(id=categories_id).one()
     categories_all = db.session.query(Categories).all()
     items = db.session.query(Categories_item).filter_by(categories_item_id=categories_id)
     items_num = items.count()
+
     if username == 'none':
         username = None
         
     return render_template('dashboard.html', username=username, categories = categories_all, items=items, category=category, items_num=items_num)
 
 
-@app.route('/create_categories/')
-def new_categories():
-    return render_template('new_categories.html')
-
+# function to create new items
 @app.route('/create_items/<username>', methods=['GET', 'POST'])
 def new_items(username):
     if request.method == 'POST':
@@ -120,6 +133,7 @@ def new_items(username):
             'new_items.html', categories=categories, username=username
             )
 
+#function to delete items
 @app.route('/catalog/<int:categories_id>/<int:categories_item_id>/delete/<username>', methods=['GET', 'POST'])
 def delete_item(categories_id, categories_item_id, username):
     categories_all = db.session.query(Categories).all()
@@ -139,8 +153,8 @@ def delete_item(categories_id, categories_item_id, username):
         return render_template('delete_item.html', username=username, deleted_item_title=deleted_item_title,
         categories_id=categories_id, categories_item_id=categories_item_id)
 
+# function to render description page of each item
 @app.route('/catalog/<int:categories_id>/<int:categories_item_id>/<username>')
-# @app.route('/catalog/<int:categories_id>/<int:categories_item_id>/')
 def catalog_description(categories_id, categories_item_id, username):
     category = db.session.query(Categories).filter_by(id=categories_id).one()
     item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
@@ -150,6 +164,7 @@ def catalog_description(categories_id, categories_item_id, username):
     return render_template('description.html', username=username, 
     category=category, item=item, categories_id=categories_id, categories_item_id=categories_item_id)
 
+# function to provide Categories API endpoint
 @app.route('/catalog_categories.json')
 def catalog_categoriesJSON():
     if 'username' not in login_session:
@@ -160,13 +175,14 @@ def catalog_categoriesJSON():
     categories = db.session.query(Categories).all()
     return jsonify(Category=[category.serialize for category in categories])
 
+# function to provide items API endpoint
 @app.route('/catalog_items.json')
 def catalog_itemsJSON():
     if 'username' not in login_session:
         flash("You need to login to access API endpoint", "info")
         time.sleep(1)
         return redirect(url_for('dashboard'))
-        
+
     items = db.session.query(Categories_item).all()
     return jsonify(Items=[item.serialize for item in items])
     
@@ -188,7 +204,7 @@ def check_google_login(STATE):
     else:
         return redirect(url_for('google_login'))
 
-
+# Sending Oauth request to Google and requesting user info
 @app.route('/google_login')
 def google_login():
 
@@ -216,7 +232,7 @@ def google_login():
         return res.read()
     return redirect(url_for('dashboard'))
  
- 
+
 @app.route('/google_auth_login')
 def google_auth_login():
     callback=url_for('authorized', _external=True)
@@ -236,6 +252,7 @@ def authorized(resp):
 def get_access_token():
     return login_session.get('access_token')
 
+# account logout function
 @app.route('/gdisconnect')
 def gdisconnect():
     access_token = login_session.get('access_token')
@@ -265,10 +282,7 @@ def gdisconnect():
     response.headers['Content-Type'] = 'application/json'
     flash('Logout was successful.', "success")
     return redirect(url_for('dashboard'))
-    # else:
-    #     response = make_response(json.dumps('Failed to revoke token for given user.', 400))
-    #     response.headers['Content-Type'] = 'application/json'
-    #     return response
+
 
 
 if __name__ == '__main__':
