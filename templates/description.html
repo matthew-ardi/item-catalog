@@ -9,16 +9,19 @@
 	<h2>{{ item.title }}</h2>
 	<h4>Description: </h4>
 	<h6>{{ item.description }}</h6>
+	{% if username %}
 	<form action="{{ url_for('delete_item', categories_id=categories_id, categories_item_id=categories_item_id, username=username) }}" >
-		{% if username %}
+		
 		<input type='submit' class="btn btn-outline-primary" value='Delete'>
-		{% endif %}
+		
 	</form>
+	{% endif %}
 </div>
 {% endif %}
 <form action="{{ url_for('dashboard', username=username) }}">
 		<input type='submit' class="btn btn-outline-primary" value='Back to Dashboard' style="width: 15%;">
 		</form>
+
 {% endblock %}
 
 {% block scripts %}

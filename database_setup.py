@@ -14,7 +14,13 @@ class Categories(Base):
     name = Column(String(80), nullable = False)
     id = Column(Integer, primary_key = True)
 
-
+	 # serializable format
+    @property
+    def serialize(self):
+        return {
+            'name' : self.name,
+            'id' : self.id
+        }
 
 class Categories_item(Base):
     # Representation of the table inside the database
@@ -27,6 +33,19 @@ class Categories_item(Base):
     categories = relationship(Categories)
 
 
+# serializable format
+    @property
+    def serialize(self):
+        return {
+            'name': self.categories.name,
+            'id' : self.categories.id,
+            'Items':{
+                'id': self.id,
+                'title': self.title,
+                'description': self.description,
+                'cat_id': self.categories.id
+            }
+        }
 
 
 ########### insert at the end of file ##########

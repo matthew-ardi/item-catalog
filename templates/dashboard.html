@@ -21,7 +21,15 @@
                 {% endfor %}
         {% endif %}
 {% endwith %}
-
+{% with messages = get_flashed_messages(category_filter=["info"]) %}
+        {% if messages %}
+                {% for message in messages %}
+                        <div class="alert alert-primary" role="alert">
+                                <strong> {{ message }} </strong>
+                        </div>
+                {% endfor %}
+        {% endif %}
+{% endwith %}
 <div class="card shadow-lg p-3 mb-5" style="width: 100%;">
         {% if username %}
         <input type='button' class="btn btn-outline-primary" value='Create items' onclick="location.href= '{{ url_for('new_items', username=username) }}'">

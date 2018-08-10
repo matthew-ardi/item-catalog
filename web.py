@@ -9,7 +9,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 from flask import make_response
 from flask_oauth import OAuth
-import requests
+import requests, time
 
 import os, random, string, json, httplib2
 
@@ -150,6 +150,26 @@ def catalog_description(categories_id, categories_item_id, username):
     return render_template('description.html', username=username, 
     category=category, item=item, categories_id=categories_id, categories_item_id=categories_item_id)
 
+@app.route('/catalog_categories.json')
+def catalog_categoriesJSON():
+    if 'username' not in login_session:
+        flash("You need to login to access API endpoint", "info")
+        time.sleep(1)
+        return redirect(url_for('dashboard'))
+
+    categories = db.session.query(Categories).all()
+    return jsonify(Category=[category.serialize for category in categories])
+
+@app.route('/catalog_items.json')
+def catalog_itemsJSON():
+    if 'username' not in login_session:
+        flash("You need to login to access API endpoint", "info")
+        time.sleep(1)
+        return redirect(url_for('dashboard'))
+        
+    items = db.session.query(Categories_item).all()
+    return jsonify(Items=[item.serialize for item in items])
+    
 # Create anti-forgery state token
 @app.route('/login')
 def login():
