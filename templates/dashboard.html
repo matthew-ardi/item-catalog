@@ -56,9 +56,10 @@
                                 {% endif %}
                                 {% endfor %}
                         {% endif %}
-
-                        {% if latest_items %}
+                        
                         <h1>Latest Items</h1>
+                        {% if latest_items %}
+                        
                                 {% for latest_item in latest_items|reverse %}
                                 {% if username %}
                                 <h5><a href="/catalog/{{ latest_item.categories.id }}/{{ latest_item.id }}/{{ username }}">{{ latest_item.title }}</a> ({{ latest_item.categories.name }})</h5>
