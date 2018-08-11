@@ -11,6 +11,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 from flask import make_response, url_for, flash, jsonify
 from flask_oauth import OAuth
+from flask_wtf.csrf import CSRFProtect
 import requests
 import time
 import os
@@ -20,6 +21,10 @@ import json
 import httplib2
 
 app = Flask(__name__)
+
+# CSRF set up
+csrf = CSRFProtect()
+csrf.init_app(app)
 
 # getting environment variables
 GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
@@ -55,7 +60,9 @@ google = oauth.remote_app(
     consumer_key=GOOGLE_CLIENT_ID,
     consumer_secret=GOOGLE_CLIENT_SECRET)
 
-
+@app.route('/')
+def home():
+    redirect(url_for('dashboard'))
 
 @app.route('/dashboard/', methods=['GET', 'POST'])
 # route for dashboard
