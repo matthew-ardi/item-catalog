@@ -16,7 +16,11 @@ sudo apt-get install virtualenv
 ## Getting your Google Oauth2 credential
 
 Using your Google account, go to [https://console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) to get your 
-API credentials. [dashboard](https://github.com/matthew-ardi/logs-analysis.git/item-catalog/md-images/google-cred.JPG)
+API credentials. ![alt text](https://github.com/matthew-ardi/item-catalog/blob/master/md-images/google-cred.JPG)
+
+Make sure that you do the following set up in the restriction section of the credential configuration:
+![alt text](https://github.com/matthew-ardi/item-catalog/blob/master/md-images/google-restriction.JPG)
+
 ## Initial Configuration
 You will need to install all required dependencies that is recorded on ```requirements.txt```. To do so, Create your virtual environment:
 ```
@@ -43,6 +47,7 @@ Variables | details
 --- | ---
 GOOGLE_CLIENT_ID | *< Your Google API client ID >*
 GOOGLE_CLIENT_SECRET | *< Your Google API client secret >*
+
 you will need to export the environment variables above while you are in the virtual environment
 ```
 (venv)$ export GOOGLE_CLIENT_ID=<your client ID>
@@ -51,7 +56,7 @@ you will need to export the environment variables above while you are in the vir
 
 Then you should be able to run the web server. 
 ```
-./web.py
+(venv)$ ./web.py
 ```
 The web can be accessed at 
 ```
