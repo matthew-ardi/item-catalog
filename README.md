@@ -16,9 +16,14 @@ sudo apt-get install virtualenv
 ## Getting your Google Oauth2 credential
 
 Using your Google account, go to [https://console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) to get your 
-API credentials. ![alt text](https://github.com/matthew-ardi/item-catalog/blob/master/md-images/google-cred.JPG)
+API credentials. 
+
+![alt text](https://github.com/matthew-ardi/item-catalog/blob/master/md-images/google-cred.JPG)
+
+<br>
 
 Make sure that you do the following set up in the restriction section of the credential configuration:
+
 ![alt text](https://github.com/matthew-ardi/item-catalog/blob/master/md-images/google-restriction.JPG)
 
 ## Initial Configuration
