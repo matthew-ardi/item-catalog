@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from flask import Flask, render_template, request, redirect
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -51,11 +53,12 @@ google = oauth.remote_app(
     access_token_method='POST',
     access_token_params={'grant_type': 'authorization_code'},
     consumer_key=GOOGLE_CLIENT_ID,
-    consumer_secret=GOOGLE_CLIENT_SECRET)                
+    consumer_secret=GOOGLE_CLIENT_SECRET)
 
 
-# route for dashboard
+
 @app.route('/dashboard/', methods=['GET', 'POST'])
+# route for dashboard
 def dashboard():
 
         # Generate state token for login authentication
@@ -94,8 +97,9 @@ def dashboard():
                 google_client_id=os.environ['GOOGLE_CLIENT_ID'],
                 STATE=state)
 
-# route to render dashboard view when user click categories section
+
 @app.route('/catalog/<int:categories_id>/<username>')
+# route to render dashboard view when user click categories section
 def catalog_view(categories_id, username):
     category = db.session.query(Categories).filter_by(id=categories_id).one()
     categories_all = db.session.query(Categories).all()
@@ -117,8 +121,9 @@ def catalog_view(categories_id, username):
         )
 
 
-# function to create new items
+
 @app.route('/create_items/<username>', methods=['GET', 'POST'])
+# function to create new items
 def new_items(username):
     if request.method == 'POST':
         selected_category = request.form['selected_category']
@@ -169,11 +174,11 @@ def new_items(username):
             username=username
             )
 
-#function to delete items
 @app.route(
     '/catalog/<int:categories_id>/<int:categories_item_id>/delete/<username>',
     methods=['GET', 'POST']
     )
+#function to delete items
 def delete_item(categories_id, categories_item_id, username):
     categories_all = db.session.query(Categories).all()
     item = db.session.query(Categories_item).filter_by(
@@ -207,8 +212,9 @@ def delete_item(categories_id, categories_item_id, username):
             categories_item_id=categories_item_id
             )
 
-# function to render description page of each item
+
 @app.route('/catalog/<int:categories_id>/<int:categories_item_id>/<username>')
+# function to render description page of each item
 def catalog_description(categories_id, categories_item_id, username):
     category = db.session.query(Categories).filter_by(id=categories_id).one()
     item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
@@ -224,8 +230,9 @@ def catalog_description(categories_id, categories_item_id, username):
         categories_item_id=categories_item_id
         )
 
-# function to provide Categories API endpoint
+
 @app.route('/catalog_categories.json')
+# function to provide Categories API endpoint
 def catalog_categoriesJSON():
     if 'username' not in login_session:
         flash("You need to login to access API endpoint", "info")
@@ -235,8 +242,9 @@ def catalog_categoriesJSON():
     categories = db.session.query(Categories).all()
     return jsonify(Category=[category.serialize for category in categories])
 
-# function to provide items API endpoint
+
 @app.route('/catalog_items.json')
+# function to provide items API endpoint
 def catalog_itemsJSON():
     if 'username' not in login_session:
         flash("You need to login to access API endpoint", "info")
@@ -246,8 +254,9 @@ def catalog_itemsJSON():
     items = db.session.query(Categories_item).all()
     return jsonify(Items=[item.serialize for item in items])
 
-# Create anti-forgery state token
+
 @app.route('/login')
+# Create anti-forgery state token
 def login():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
@@ -255,8 +264,9 @@ def login():
     # return "The current session state is %s" % login_session['state']
     return redirect(url_for('check_google_login', STATE=state))
 
-# Validate state token
+
 @app.route('/check_google_login/<STATE>')
+# Validate state token
 def check_google_login(STATE):
     if STATE != login_session['state']:
         flash("Invalid state parameter.", "error")
@@ -264,8 +274,9 @@ def check_google_login(STATE):
     else:
         return redirect(url_for('google_login'))
 
-# Sending Oauth request to Google and requesting user info
+
 @app.route('/google_login')
+# Sending Oauth request to Google and requesting user info
 def google_login():
 
     access_token = login_session.get('access_token')
@@ -315,8 +326,9 @@ def authorized(resp):
 def get_access_token():
     return login_session.get('access_token')
 
-# account logout function
+
 @app.route('/gdisconnect')
+# account logout function
 def gdisconnect():
     access_token = login_session.get('access_token')
     if 'username' in login_session:
