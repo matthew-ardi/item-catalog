@@ -3,7 +3,7 @@
 from flask import (Flask, render_template, request, redirect)
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import (Base, Categories, Categories_item)
+from models import (Base, Categories, Categories_item)
 from flask_sqlalchemy import SQLAlchemy
 from flask_dance.contrib.google import (make_google_blueprint, google)
 from flask import session as login_session
@@ -109,7 +109,7 @@ def dashboard():
 @app.route('/catalog/<int:categories_id>/<username>')
 # route to render dashboard view when user click categories section
 def catalog_view(categories_id, username):
-    category = db.session.query(Categories).filter_by(id=categories_id).one()
+    category = db.session.query(Categories).filter_by(id=categories_id).one_or_none()
     categories_all = db.session.query(Categories).all()
     items = db.session.query(Categories_item).filter_by(
         categories_item_id=categories_id
@@ -137,7 +137,7 @@ def new_items(username):
         selected_category = request.form['selected_category']
         categories = db.session.query(Categories).filter_by(
             name=selected_category
-            ).one()
+            ).one_or_none()
         categories_id = categories.id
         categories_name = categories.name
 
@@ -188,17 +188,21 @@ def new_items(username):
 
 @app.route(
     '/catalog/<int:categories_id>/<int:categories_item_id>/delete/<username>',
-    methods=['GET', 'POST']
+    methods=['GET','POST']
     )
 #function to delete items
 def delete_item(categories_id, categories_item_id, username):
+    if 'username' not in login_session:
+        flash("You need to login to delete items", "info")
+        time.sleep(1)
+        return redirect(url_for('dashboard'))
+
     categories_all = db.session.query(Categories).all()
     item = db.session.query(Categories_item).filter_by(
         id=categories_item_id
-        ).one()
+        ).one_or_none()
     deleted_item_title = item.title
     if request.method == 'POST':
-        # category = db.session.query(Categories).filter_by(id=categories_id).one()
         db.session.delete(item)
         db.session.commit()
         flash("item " + deleted_item_title + " has been successfully deleted.", "success")
@@ -228,8 +232,8 @@ def delete_item(categories_id, categories_item_id, username):
 @app.route('/catalog/<int:categories_id>/<int:categories_item_id>/<username>')
 # function to render description page of each item
 def catalog_description(categories_id, categories_item_id, username):
-    category = db.session.query(Categories).filter_by(id=categories_id).one()
-    item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
+    category = db.session.query(Categories).filter_by(id=categories_id).one_or_none()
+    item = db.session.query(Categories_item).filter_by(id=categories_item_id).one_or_none()
     image = base64.b64encode(item.picture).decode('ascii')
     if username == 'none':
         username = None
@@ -249,7 +253,7 @@ def catalog_description(categories_id, categories_item_id, username):
 # function to provide Categories API endpoint
 def catalog_categoriesJSON():
     if 'username' not in login_session:
-        flash("You need to login to access API endpoint", "info")
+        flash("You need to login to access API endpoints", "info")
         time.sleep(1)
         return redirect(url_for('dashboard'))
 
@@ -259,20 +263,35 @@ def catalog_categoriesJSON():
 
 @app.route('/<int:categories_id>/category.json')
 def categoryJSON(categories_id):
-    category = db.session.query(Categories).filter_by(id=categories_id).one()
+    if 'username' not in login_session:
+        flash("You need to login to access API endpoints", "info")
+        time.sleep(1)
+        return redirect(url_for('dashboard'))
+
+    category = db.session.query(Categories).filter_by(id=categories_id).one_or_none()
     return jsonify(category.serialize)
 
 @app.route('/<int:categories_id>/<int:categories_item_id>/item.json')
 def itemJSON(categories_id, categories_item_id):
-    category = db.session.query(Categories).filter_by(id=categories_id).one()
+    if 'username' not in login_session:
+        flash("You need to login to access API endpoints", "info")
+        time.sleep(1)
+        return redirect(url_for('dashboard'))
+
+    category = db.session.query(Categories).filter_by(id=categories_id).one_or_none()
     item = db.session.query(Categories_item).filter_by(
         id=categories_item_id
-        ).one()
+        ).one_or_none()
     return jsonify(item.serialize)
 
 @app.route('/<int:categories_id>/all_items.json')
 def category_itemsJSON(categories_id):
-    category = db.session.query(Categories).filter_by(id=categories_id).one()
+    if 'username' not in login_session:
+        flash("You need to login to access API endpoints", "info")
+        time.sleep(1)
+        return redirect(url_for('dashboard'))
+
+    category = db.session.query(Categories).filter_by(id=categories_id).one_or_none()
     items = db.session.query(Categories_item).filter_by(
         categories_item_id=categories_id
         )
@@ -284,7 +303,7 @@ def category_itemsJSON(categories_id):
 # function to provide items API endpoint
 def catalog_itemsJSON():
     if 'username' not in login_session:
-        flash("You need to login to access API endpoint", "info")
+        flash("You need to login to access API endpoints", "info")
         time.sleep(1)
         return redirect(url_for('dashboard'))
 
