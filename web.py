@@ -251,8 +251,8 @@ def catalog_description(categories_id, categories_item_id, username):
         )
 
 
-@app.route('/catalog_categories.json')
-# function to provide Categories API endpoint
+@app.route('/catalog/catalog_categories.json')
+# function to provide all Categories API endpoint
 def catalog_categoriesJSON():
     if 'username' not in login_session:
         flash("You need to login to access API endpoints", "info")
@@ -263,7 +263,8 @@ def catalog_categoriesJSON():
     return jsonify(Category=[category.serialize for category in categories])
 
 
-@app.route('/<int:categories_id>/category.json')
+@app.route('/catalog/<int:categories_id>/category.json')
+# function to provide a category API endpoint
 def categoryJSON(categories_id):
     if 'username' not in login_session:
         flash("You need to login to access API endpoints", "info")
@@ -273,7 +274,8 @@ def categoryJSON(categories_id):
     category = db.session.query(Categories).filter_by(id=categories_id).one_or_none()
     return jsonify(category.serialize)
 
-@app.route('/<int:categories_id>/<int:categories_item_id>/item.json')
+@app.route('/catalog/<int:categories_id>/<int:categories_item_id>/item.json')
+# function to provide a specific item API endpoint
 def itemJSON(categories_id, categories_item_id):
     if 'username' not in login_session:
         flash("You need to login to access API endpoints", "info")
@@ -286,7 +288,8 @@ def itemJSON(categories_id, categories_item_id):
         ).one_or_none()
     return jsonify(item.serialize)
 
-@app.route('/<int:categories_id>/all_items.json')
+@app.route('/catalog/<int:categories_id>/all_items.json')
+# function to provide all items given a category API endpoint
 def category_itemsJSON(categories_id):
     if 'username' not in login_session:
         flash("You need to login to access API endpoints", "info")
@@ -301,8 +304,8 @@ def category_itemsJSON(categories_id):
     return jsonify([item.serialize_items for item in items])
 
 
-@app.route('/catalog_items.json')
-# function to provide items API endpoint
+@app.route('/catalog/catalog_items.json')
+# function to provide all items API endpoint
 def catalog_itemsJSON():
     if 'username' not in login_session:
         flash("You need to login to access API endpoints", "info")
