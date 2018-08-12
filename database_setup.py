@@ -2,7 +2,7 @@
 
 import sys
 
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -31,6 +31,7 @@ class Categories_item(Base):
     title = Column(String(80), nullable = False)
     id = Column(Integer, primary_key = True)
     description = Column(String(10000), nullable = False)
+    picture = Column(LargeBinary)
     categories_item_id = Column(Integer, ForeignKey('categories.id'))
     categories = relationship(Categories)
 

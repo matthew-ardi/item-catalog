@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
-from flask import Flask, render_template, request, redirect
+from flask import (Flask, render_template, request, redirect)
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Categories, Categories_item
+from database_setup import (Base, Categories, Categories_item)
 from flask_sqlalchemy import SQLAlchemy
-from flask_dance.contrib.google import make_google_blueprint, google
+from flask_dance.contrib.google import (make_google_blueprint, google)
 from flask import session as login_session
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
-from flask import make_response, url_for, flash, jsonify
+from flask import (make_response, url_for, flash, jsonify)
 from flask_oauth import OAuth
 from flask_wtf.csrf import CSRFProtect
 import requests
@@ -19,6 +19,7 @@ import random
 import string
 import json
 import httplib2
+import base64
 
 app = Flask(__name__)
 
@@ -142,10 +143,14 @@ def new_items(username):
 
         new_item_title = request.form['title']
         new_item_description = request.form['description']
+        file = request.files['inputImage']
+
+        new_item_image = file.read()
 
         newItem = Categories_item(
             title=new_item_title,
             description=new_item_description,
+            picture=new_item_image,
             categories_item_id=categories_id
             )
         db.session.add(newItem)
@@ -225,6 +230,7 @@ def delete_item(categories_id, categories_item_id, username):
 def catalog_description(categories_id, categories_item_id, username):
     category = db.session.query(Categories).filter_by(id=categories_id).one()
     item = db.session.query(Categories_item).filter_by(id=categories_item_id).one()
+    image = base64.b64encode(item.picture).decode('ascii')
     if username == 'none':
         username = None
 
@@ -233,6 +239,7 @@ def catalog_description(categories_id, categories_item_id, username):
         username=username,
         category=category,
         item=item,
+        image=image,
         categories_id=categories_id,
         categories_item_id=categories_item_id
         )

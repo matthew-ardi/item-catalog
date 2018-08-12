@@ -5,7 +5,7 @@
 {% block content %}
 <h1>Add New Item</h1>
 <div class="card shadow-lg p-3 mb-5" style="width: 100%;">
-    <form action="{{ url_for('new_items', username=username) }}" method='post'>
+    <form action="{{ url_for('new_items', username=username) }}" method='post' enctype=multipart/form-data>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <dl>
             <div class="form-group" style='width: 30%;'>
@@ -17,7 +17,11 @@
                 <input class="form-control" name="description" placeholder="Description">
                 <small id="emailHelp" class="form-text text-muted">Describe your new item</small>
             </div>
-            <label for="exampleInputEmail1">Category</label>
+            <label>Upload Image</label>
+            <br>
+            <input type="file" name="inputImage" accept="image/*">
+            <br>
+            <label>Category</label>
             <div class="dropdown">
                 <select class="custom-select" style="width: 20%;" name="selected_category">
                     <option>Choose one</option>
