@@ -251,7 +251,7 @@ def catalog_description(categories_id, categories_item_id, username):
         )
 
 
-@app.route('/catalog/all_categories.json')
+@app.route('/catalog/all_categories.json', methods=['GET'])
 # function to provide all Categories API endpoint
 def catalog_categoriesJSON():
     if 'username' not in login_session:
@@ -263,7 +263,7 @@ def catalog_categoriesJSON():
     return jsonify(Category=[category.serialize for category in categories])
 
 
-@app.route('/catalog/<int:categories_id>/category.json')
+@app.route('/catalog/<int:categories_id>/category.json', methods=['GET'])
 # function to provide a category API endpoint
 def categoryJSON(categories_id):
     if 'username' not in login_session:
@@ -274,7 +274,7 @@ def categoryJSON(categories_id):
     category = db.session.query(Categories).filter_by(id=categories_id).one_or_none()
     return jsonify(category.serialize)
 
-@app.route('/catalog/<int:categories_id>/<int:categories_item_id>/item.json')
+@app.route('/catalog/<int:categories_id>/<int:categories_item_id>/item.json', methods=['GET'])
 # function to provide a specific item API endpoint
 def itemJSON(categories_id, categories_item_id):
     if 'username' not in login_session:
@@ -288,7 +288,7 @@ def itemJSON(categories_id, categories_item_id):
         ).one_or_none()
     return jsonify(item.serialize)
 
-@app.route('/catalog/<int:categories_id>/all_items.json')
+@app.route('/catalog/<int:categories_id>/all_items.json', methods=['GET'])
 # function to provide all items given a category API endpoint
 def category_itemsJSON(categories_id):
     if 'username' not in login_session:
@@ -304,7 +304,7 @@ def category_itemsJSON(categories_id):
     return jsonify([item.serialize_items for item in items])
 
 
-@app.route('/catalog/catalog_items.json')
+@app.route('/catalog/all_items.json', methods=['GET'])
 # function to provide all items API endpoint
 def catalog_itemsJSON():
     if 'username' not in login_session:

@@ -80,8 +80,8 @@ There are 2 API endpoints without parameters that you can access through the bro
 
 API endpoints | details
 --- | --- 
-```http://localhost:5000/catalog/catalog_categories.json``` | return all categories metadata
-```http://localhost:5000/catalog/catalog_items.json``` |return all items metadata
+```http://localhost:5000/catalog/all_categories.json``` | return all categories metadata
+```http://localhost:5000/catalog/all_items.json``` |return all items metadata
 
 Additional 3 API endpoints with parameters:
 
@@ -96,7 +96,7 @@ Field | Type | Description
 
 **2. Get an item**
 ```
-http://localhost:5000/catalog/<int:categories id>/<int:item id>/item.json
+http://localhost:5000/catalog/<categories id>/<item id>/item.json
 ```
 Field | Type | Description
 --- | --- | ---
@@ -105,7 +105,7 @@ Field | Type | Description
 
 **3. Get all items in a category**
 ```
-http://localhost:5000/catalog/<int:categories id>/all_items.json
+http://localhost:5000/catalog/<categories id>/all_items.json
 ```
 Field | Type | Description
 --- | --- | ---
