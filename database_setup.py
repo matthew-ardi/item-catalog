@@ -41,13 +41,20 @@ class Categories_item(Base):
     def serialize(self):
         return {
             'name': self.categories.name,
-            'id' : self.categories.id,
+            'cat_id' : self.categories.id,
             'Items':{
                 'id': self.id,
                 'title': self.title,
-                'description': self.description,
-                'cat_id': self.categories.id
+                'description': self.description
             }
+        }
+
+    @property
+    def serialize_items(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description
         }
 
 

@@ -257,6 +257,29 @@ def catalog_categoriesJSON():
     return jsonify(Category=[category.serialize for category in categories])
 
 
+@app.route('/<int:categories_id>/category.json')
+def categoryJSON(categories_id):
+    category = db.session.query(Categories).filter_by(id=categories_id).one()
+    return jsonify(category.serialize)
+
+@app.route('/<int:categories_id>/<int:categories_item_id>/item.json')
+def itemJSON(categories_id, categories_item_id):
+    category = db.session.query(Categories).filter_by(id=categories_id).one()
+    item = db.session.query(Categories_item).filter_by(
+        id=categories_item_id
+        ).one()
+    return jsonify(item.serialize)
+
+@app.route('/<int:categories_id>/all_items.json')
+def category_itemsJSON(categories_id):
+    category = db.session.query(Categories).filter_by(id=categories_id).one()
+    items = db.session.query(Categories_item).filter_by(
+        categories_item_id=categories_id
+        )
+ 
+    return jsonify([item.serialize_items for item in items])
+
+
 @app.route('/catalog_items.json')
 # function to provide items API endpoint
 def catalog_itemsJSON():
