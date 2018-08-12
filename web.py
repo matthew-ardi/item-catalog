@@ -251,7 +251,7 @@ def catalog_description(categories_id, categories_item_id, username):
         )
 
 
-@app.route('/catalog/catalog_categories.json')
+@app.route('/catalog/all_categories.json')
 # function to provide all Categories API endpoint
 def catalog_categoriesJSON():
     if 'username' not in login_session:

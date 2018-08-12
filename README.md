@@ -76,13 +76,40 @@ You will need to log in using your Google Account to access the following featur
 
 
 ## Accessing API endpoints
-There are 2 API endpoints that you can access through the browser urls:
+There are 2 API endpoints without parameters that you can access through the browser urls:
 
 API endpoints | details
---- | ---
-```http://localhost:5000/catalog_categories.json``` | return all categories metadata
-```http://localhost:5000/catalog_items.json``` | return all items metadata
+--- | --- 
+```http://localhost:5000/catalog/catalog_categories.json``` | return all categories metadata
+```http://localhost:5000/catalog/catalog_items.json``` |return all items metadata
 
+Additional 3 API endpoints with parameters:
+
+**1. Get a Category**
+
+```
+http://localhost:5000/catalog/<category id>/category.json
+```
+Field | Type | Description
+--- | --- | ---
+```category id``` | integer | the id of the category
+
+**2. Get an item**
+```
+http://localhost:5000/catalog/<int:categories id>/<int:item id>/item.json
+```
+Field | Type | Description
+--- | --- | ---
+```categories id``` | integer | the id of the category
+```item id``` | integer | the id of the item
+
+**3. Get all items in a category**
+```
+http://localhost:5000/catalog/<int:categories id>/all_items.json
+```
+Field | Type | Description
+--- | --- | ---
+```categories id``` | integer | the id of the category
 
 ## Resetting database
 To reset the database to the original version, do the following steps in order
