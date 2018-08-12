@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from flask import (Flask, render_template, request, redirect)
-from sqlalchemy import create_engine
+from sqlalchemy import (create_engine, exc)
 from sqlalchemy.orm import sessionmaker
 from models import (Base, Categories, Categories_item)
 from flask_sqlalchemy import SQLAlchemy
@@ -84,7 +84,7 @@ def dashboard():
         categories_all = db.session.query(Categories).all()
         try:
             latest_items = db.session.query(Categories_item).all()
-        except:
+        except exc.SQLAlchemyError:
             pass
         if logged_in:
             return render_template(
@@ -163,7 +163,7 @@ def new_items(username):
 
         try:
             latest_items = db.session.query(Categories_item).all()
-        except:
+        except exc.SQLAlchemyError:
             pass
 
         flash(
@@ -192,6 +192,8 @@ def new_items(username):
     )
 #function to delete items
 def delete_item(categories_id, categories_item_id, username):
+
+    # Check for Authorization
     if 'username' not in login_session:
         flash("You need to login to delete items", "info")
         time.sleep(1)
@@ -208,7 +210,7 @@ def delete_item(categories_id, categories_item_id, username):
         flash("item " + deleted_item_title + " has been successfully deleted.", "success")
         try:     
             latest_items = db.session.query(Categories_item).all()
-        except:
+        except exc.SQLAlchemyError:
             pass
         return redirect(
             url_for(
