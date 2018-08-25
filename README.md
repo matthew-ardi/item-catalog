@@ -119,7 +119,7 @@ To reset the database to the original version, do the following steps in order
 ```
 2. set up the new database
 ```
-(venv)$ ./database_setup.py
+(venv)$ ./models.py
 ```
 3. Populate database with the default categories
 ```
